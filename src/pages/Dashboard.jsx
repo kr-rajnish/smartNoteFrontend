@@ -1,165 +1,175 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useCallback } from "react";
 import { Link } from "react-router-dom";
-
-const dummyNotes = [
-  {
-    _id: "1",
-    title: "React Basics",
-    summary: "An introduction to React and its core concepts.",
-    tags: ["react", "javascript", "frontend"],
-  },
-  {
-    _id: "2",
-    title: "State vs Props",
-    summary: "Understanding the difference between state and props in React.",
-    tags: ["react", "state", "props"],
-  },
-  {
-    _id: "3",
-    title: "Hooks in React",
-    summary: "Learn about useState and useEffect hooks.",
-    tags: ["hooks", "useState", "useEffect"],
-  },
-  {
-    _id: "4",
-    title: "React Basics",
-    summary: "An introduction to React and its core concepts.",
-    tags: ["react", "javascript", "frontend"],
-  },
-  {
-    _id: "5",
-    title: "State vs Props",
-    summary: "Understanding the difference between state and props in React.",
-    tags: ["react", "state", "props"],
-  },
-  {
-    _id: "6",
-    title: "Hooks in React",
-    summary: "Learn about useState and useEffect hooks.",
-    tags: ["hooks", "useState", "useEffect"],
-  },
-  {
-    _id: "7",
-    title: "React Basics",
-    summary: "An introduction to React and its core concepts.",
-    tags: ["react", "javascript", "frontend"],
-  },
-  {
-    _id: "8",
-    title: "State vs Props",
-    summary: "Understanding the difference between state and props in React.",
-    tags: ["react", "state", "props"],
-  },
-  {
-    _id: "9",
-    title: "Hooks in React",
-    summary: "Learn about useState and useEffect hooks.",
-    tags: ["hooks", "useState", "useEffect"],
-  },
-  // ... remaining notes with unique IDs
-];
-
-const dummyUser = {
-  name: "John Doe",
-  isFirstLogin: true,
-};
+import { deleteNote, getNotes } from "../services/noteThunk";
+import {
+  checkFirstLoginStatus,
+  updateFirstLoginStatus,
+} from "../services/authThunk";
+import { useDispatch, useSelector } from "react-redux";
+import { setFilters } from "../services/noteSlice";
 
 const Dashboard = () => {
-  const [allNotes, setAllNotes] = useState([]);
+  const dispatch = useDispatch();
+  const { notes, isLoading, filters } = useSelector((state) => state.notes);
+  const { isFirstLogin } = useSelector((state) => state.auth);
   const [displayedNotes, setDisplayedNotes] = useState([]);
   const [searchQuery, setSearchQuery] = useState("");
   const [showOnboarding, setShowOnboarding] = useState(false);
-  const [loading, setLoading] = useState(false);
   const [pagination, setPagination] = useState({
     currentPage: 1,
     totalPages: 1,
     itemsPerPage: 6,
   });
 
-  // Load all notes once on component mount
+  // Initialize searchQuery from Redux state on component mount
   useEffect(() => {
-    // Simulate API call to get all notes
-    setLoading(true);
-    setTimeout(() => {
-      // Ensure all notes have unique IDs
-      const uniqueNotes = dummyNotes.map((note, index) => ({
-        ...note,
-        _id: String(index + 1),
-      }));
-
-      setAllNotes(uniqueNotes);
-
-      // Calculate total pages based on notes count and items per page
-      const totalPages = Math.ceil(
-        uniqueNotes.length / pagination.itemsPerPage
-      );
-      setPagination((prev) => ({
-        ...prev,
-        totalPages,
-      }));
-
-      setLoading(false);
-    }, 500);
-
-    if (dummyUser.isFirstLogin) {
-      setShowOnboarding(true);
+    if (filters.search) {
+      setSearchQuery(filters.search);
     }
   }, []);
 
-  // Update displayed notes whenever pagination changes or all notes change
+  // Check for first login status
   useEffect(() => {
-    updateDisplayedNotes();
-  }, [pagination.currentPage, allNotes, searchQuery]);
+    dispatch(checkFirstLoginStatus());
+  }, [dispatch]);
 
-  // Function to update displayed notes based on current page and search
-  const updateDisplayedNotes = () => {
-    let filteredNotes = allNotes;
-
-    // Apply search filter if needed
-    if (searchQuery) {
-      filteredNotes = allNotes.filter((note) =>
-        note.title.toLowerCase().includes(searchQuery.toLowerCase())
-      );
+  // Set onboarding modal based on isFirstLogin status
+  useEffect(() => {
+    if (isFirstLogin) {
+      setShowOnboarding(true);
     }
+  }, [isFirstLogin]);
 
-    // Update total pages based on filtered results
-    const totalPages = Math.max(
-      1,
-      Math.ceil(filteredNotes.length / pagination.itemsPerPage)
+  // Load notes with search params on component mount and whenever search changes
+  useEffect(() => {
+    fetchNotes();
+  }, [dispatch, filters]);
+
+  // Fetch notes from API with search parameters
+  const fetchNotes = async () => {
+    try {
+      // Log the search parameters for debugging
+      console.log("Fetching notes with params:", {
+        search: filters.search,
+        tag: filters.tag,
+      });
+
+      await dispatch(
+        getNotes({
+          search: filters.search,
+          tag: filters.tag,
+        })
+      );
+    } catch (error) {
+      console.error("Error fetching notes:", error);
+    }
+  };
+
+  // Debounced search function
+  const debouncedSearch = useCallback(
+    (() => {
+      let timeoutId = null;
+      return (query) => {
+        if (timeoutId) {
+          clearTimeout(timeoutId);
+        }
+
+        // If query is empty, search after 1 second
+        if (!query) {
+          timeoutId = setTimeout(() => {
+            dispatch(
+              setFilters({
+                ...filters,
+                search: query,
+              })
+            );
+            setPagination((prev) => ({
+              ...prev,
+              currentPage: 1,
+            }));
+          }, 1000);
+        } else {
+          // If query has content, search after 2 seconds
+          timeoutId = setTimeout(() => {
+            dispatch(
+              setFilters({
+                ...filters,
+                search: query,
+              })
+            );
+            setPagination((prev) => ({
+              ...prev,
+              currentPage: 1,
+            }));
+          }, 2000);
+        }
+      };
+    })(),
+    [filters, dispatch]
+  );
+
+  // Handle search input change
+  const handleSearchInputChange = (e) => {
+    const query = e.target.value;
+    setSearchQuery(query);
+    debouncedSearch(query);
+  };
+
+  // Manual search form submission
+  const handleSearch = (e) => {
+    e.preventDefault();
+    console.log("Manual search initiated:", searchQuery);
+
+    // Update the filters in Redux store immediately
+    dispatch(
+      setFilters({
+        ...filters,
+        search: searchQuery,
+      })
     );
 
+    // Reset to first page when searching
+    setPagination((prev) => ({
+      ...prev,
+      currentPage: 1,
+    }));
+  };
+
+  // Update displayed notes and pagination whenever notes change
+  useEffect(() => {
+    // Calculate total pages based on notes count and items per page
+    const totalPages = Math.ceil(notes.length / pagination.itemsPerPage);
+
     // Ensure current page is valid
-    const validCurrentPage = Math.min(pagination.currentPage, totalPages);
-    if (validCurrentPage !== pagination.currentPage) {
-      setPagination((prev) => ({
-        ...prev,
-        currentPage: validCurrentPage,
-      }));
-      return; // This will trigger another useEffect call with the corrected page
-    }
+    const validCurrentPage = Math.min(
+      pagination.currentPage,
+      Math.max(1, totalPages)
+    );
 
     // Calculate start and end indices for pagination
     const startIndex = (validCurrentPage - 1) * pagination.itemsPerPage;
     const endIndex = startIndex + pagination.itemsPerPage;
 
     // Set displayed notes to the current page's items
-    setDisplayedNotes(filteredNotes.slice(startIndex, endIndex));
+    setDisplayedNotes(notes.slice(startIndex, endIndex));
 
     // Update pagination info
     setPagination((prev) => ({
       ...prev,
-      totalPages,
+      currentPage: validCurrentPage,
+      totalPages: Math.max(1, totalPages),
     }));
-  };
+  }, [notes, pagination.currentPage, pagination.itemsPerPage]);
 
-  const handleSearch = (e) => {
-    e.preventDefault();
-    // Reset to first page when searching
-    setPagination((prev) => ({
-      ...prev,
-      currentPage: 1,
-    }));
-    // The actual filtering happens in updateDisplayedNotes
+  // Clear search
+  const handleClearSearch = () => {
+    setSearchQuery("");
+    dispatch(
+      setFilters({
+        ...filters,
+        search: "",
+      })
+    );
   };
 
   const handlePageChange = (page) => {
@@ -173,12 +183,25 @@ const Dashboard = () => {
 
   const handleDeleteNote = (id) => {
     if (window.confirm("Are you sure you want to delete this note?")) {
-      setAllNotes((prev) => prev.filter((note) => note._id !== id));
+      dispatch(deleteNote(id))
+        .unwrap()
+        .then(() => {
+          console.log("Note deleted successfully");
+          alert("Note deleted");
+          // Refresh notes list after deletion
+          fetchNotes();
+        })
+        .catch((error) => {
+          console.error("Failed to delete note:", error);
+          alert("Note not deleted");
+        });
     }
   };
 
   const handleCloseOnboarding = () => {
     setShowOnboarding(false);
+    // Update the first login status in the database
+    dispatch(updateFirstLoginStatus());
   };
 
   // Generate array of page numbers for pagination UI
@@ -229,8 +252,8 @@ const Dashboard = () => {
           <input
             type="text"
             value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-            placeholder="Search notes..."
+            onChange={handleSearchInputChange}
+            placeholder="Search notes by title, content or summary..."
             className="flex-grow px-4 py-2 border rounded-l"
           />
           <button
@@ -240,10 +263,27 @@ const Dashboard = () => {
             Search
           </button>
         </form>
+        {isLoading && (
+          <div className="mt-2 flex items-center text-sm text-gray-500">
+            <div className="animate-spin h-4 w-4 border-t-2 border-b-2 border-blue-600 rounded-full mr-2"></div>
+            Searching...
+          </div>
+        )}
+        {filters.search && !isLoading && (
+          <div className="mt-2 text-sm text-gray-600 flex justify-between">
+            <span>Showing results for: "{filters.search}"</span>
+            <button
+              onClick={handleClearSearch}
+              className="text-blue-600 hover:text-blue-800"
+            >
+              Clear search
+            </button>
+          </div>
+        )}
       </div>
 
       {/* Notes Grid */}
-      {loading ? (
+      {isLoading ? (
         <div className="flex justify-center my-12">
           <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-blue-600"></div>
         </div>
@@ -274,14 +314,15 @@ const Dashboard = () => {
                 {note.summary}
               </p>
               <div className="flex flex-wrap gap-2 mt-4">
-                {note.tags.map((tag, i) => (
-                  <span
-                    key={i}
-                    className="bg-blue-100 text-blue-800 text-xs px-2 py-1 rounded"
-                  >
-                    {tag}
-                  </span>
-                ))}
+                {note.tags &&
+                  note.tags.map((tag, i) => (
+                    <span
+                      key={i}
+                      className="bg-blue-100 text-blue-800 text-xs px-2 py-1 rounded"
+                    >
+                      {tag}
+                    </span>
+                  ))}
               </div>
               <div className="mt-4 text-right">
                 <Link
@@ -296,13 +337,27 @@ const Dashboard = () => {
         </div>
       ) : (
         <div className="bg-gray-50 rounded-lg p-8 text-center">
-          <p className="text-gray-600 mb-4">No notes found.</p>
-          <Link
-            to="/create-note"
-            className="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700"
-          >
-            Create Note
-          </Link>
+          <p className="text-gray-600 mb-4">
+            {filters.search
+              ? `No notes found matching "${filters.search}".`
+              : "No notes found."}
+          </p>
+          <div className="flex justify-center space-x-4">
+            {filters.search && (
+              <button
+                onClick={handleClearSearch}
+                className="bg-gray-200 text-gray-700 px-4 py-2 rounded hover:bg-gray-300"
+              >
+                Clear Search
+              </button>
+            )}
+            <Link
+              to="/create-note"
+              className="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700"
+            >
+              Create Note
+            </Link>
+          </div>
         </div>
       )}
 
@@ -359,7 +414,7 @@ const Dashboard = () => {
       )}
 
       {/* Page info */}
-      {!loading && displayedNotes.length > 0 && (
+      {!isLoading && displayedNotes.length > 0 && (
         <div className="text-center text-gray-500 mt-4">
           Showing page {pagination.currentPage} of {pagination.totalPages}
         </div>

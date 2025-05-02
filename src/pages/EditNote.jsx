@@ -1,41 +1,15 @@
 import React, { useState, useEffect } from "react";
+import { useDispatch, useSelector } from "react-redux";
 import { useParams, useNavigate } from "react-router-dom";
+import { updateNote } from "../services/noteThunk";
 
 // Dummy data to replace API calls
-const dummyNotes = [
-  {
-    _id: "1",
-    title: "React Basics",
-    content:
-      "React is a JavaScript library for building user interfaces. It allows developers to create reusable UI components and manage state efficiently.",
-    summary: "An introduction to React and its core concepts.",
-    tags: ["react", "javascript", "frontend"],
-    createdAt: "2025-01-15T14:22:00Z",
-    updatedAt: "2025-01-15T14:22:00Z",
-  },
-  {
-    _id: "2",
-    title: "State vs Props",
-    content:
-      "In React, both props and state hold information that influences rendering, but they serve different purposes.",
-    summary: "Understanding the difference between state and props in React.",
-    tags: ["react", "state", "props"],
-    createdAt: "2025-02-03T10:15:00Z",
-    updatedAt: "2025-02-05T16:30:00Z",
-  },
-  {
-    _id: "3",
-    title: "Hooks in React",
-    content:
-      "Hooks are functions that let you use React features from functional components.",
-    summary: "Learn about useState and useEffect hooks.",
-    tags: ["hooks", "useState", "useEffect"],
-    createdAt: "2025-03-10T09:45:00Z",
-    updatedAt: "2025-03-10T09:45:00Z",
-  },
-];
 
 const EditNote = () => {
+  const dispatch = useDispatch();
+  const allNotes = useSelector((state) => state.notes?.notes);
+  console.log("allNotes", allNotes);
+
   const { id } = useParams();
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -45,6 +19,7 @@ const EditNote = () => {
   const [formData, setFormData] = useState({
     title: "",
     content: "",
+    summary: "",
     tags: [],
   });
 
@@ -61,7 +36,10 @@ const EditNote = () => {
     // Simulate API delay
     setTimeout(() => {
       // Find the note in our dummy data
-      const foundNote = dummyNotes.find((note) => note._id === id);
+      const foundNote = allNotes.find((note) => note._id === id);
+      // const findNote = async () => {
+      //   const response = await dispatch()
+      // }
 
       if (foundNote) {
         console.log("Note data retrieved:", foundNote);
@@ -129,22 +107,18 @@ const EditNote = () => {
       return;
     }
 
-    // Log what would be sent to the API
-    console.log("Sending API request to update note:", {
-      method: "PUT",
-      url: `/api/notes/${id}`,
-      data: {
-        ...formData,
-        updatedAt: new Date().toISOString(),
-      },
-    });
-
-    // Simulate successful API response
-    setTimeout(() => {
-      console.log("Note updated successfully");
-      setLoading(false);
-      navigate("/dashboard");
-    }, 1000);
+    dispatch(updateNote({ id, updatedData: formData }))
+      .unwrap()
+      .then(() => {
+        console.log("Note updated successfully");
+        setLoading(false);
+        navigate("/dashboard");
+      })
+      .catch((error) => {
+        console.error("Failed to update note:", error);
+        setLoading(false);
+        alert("Failed to update note");
+      });
   };
 
   // Loading state

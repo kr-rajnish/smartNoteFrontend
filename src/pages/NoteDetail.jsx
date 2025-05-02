@@ -1,43 +1,14 @@
 import React, { useState, useEffect } from "react";
+import { useDispatch, useSelector } from "react-redux";
 import { useParams, useNavigate, Link } from "react-router-dom";
-
-// Dummy data to replace API calls
-const dummyNotes = [
-  {
-    _id: "1",
-    title: "React Basics",
-    summary: "An introduction to React and its core concepts.",
-    content:
-      "<p>React is a JavaScript library for building user interfaces. It allows developers to create reusable UI components and manage state efficiently.</p><p>Key concepts include:</p><ul><li>Components</li><li>Props</li><li>State</li><li>Lifecycle methods</li></ul>",
-    tags: ["react", "javascript", "frontend"],
-    createdAt: "2025-01-15T14:22:00Z",
-    updatedAt: "2025-01-15T14:22:00Z",
-  },
-  {
-    _id: "2",
-    title: "State vs Props",
-    summary: "Understanding the difference between state and props in React.",
-    content:
-      "<p>In React, both <strong>props</strong> and <strong>state</strong> hold information that influences rendering, but they serve different purposes:</p><p><strong>Props:</strong> Pass data from parent to child components. They are immutable from the child component's perspective.</p><p><strong>State:</strong> Managed within a component and can change over time. When state updates, the component re-renders.</p>",
-    tags: ["react", "state", "props"],
-    createdAt: "2025-02-03T10:15:00Z",
-    updatedAt: "2025-02-05T16:30:00Z",
-  },
-  {
-    _id: "3",
-    title: "Hooks in React",
-    summary: "Learn about useState and useEffect hooks.",
-    content:
-      "<p>Hooks are functions that let you use React features from functional components.</p><h3>useState</h3><p>Allows functional components to have state:</p><pre><code>const [count, setCount] = useState(0);</code></pre><h3>useEffect</h3><p>Handles side effects in functional components:</p><pre><code>useEffect(() => {<br>  document.title = `Count: ${count}`;<br>}, [count]);</code></pre>",
-    tags: ["hooks", "useState", "useEffect"],
-    createdAt: "2025-03-10T09:45:00Z",
-    updatedAt: "2025-03-10T09:45:00Z",
-  },
-];
+import { deleteNote } from "../services/noteThunk";
 
 const NoteDetail = () => {
   const { id } = useParams();
   const navigate = useNavigate();
+  const dispatch = useDispatch();
+
+  const allNotes = useSelector((state) => state.notes?.notes);
 
   // State to manage the current note and loading status
   const [currentNote, setCurrentNote] = useState(null);
@@ -48,7 +19,7 @@ const NoteDetail = () => {
   useEffect(() => {
     // Simulate network delay
     const timer = setTimeout(() => {
-      const foundNote = dummyNotes.find((note) => note._id === id);
+      const foundNote = allNotes.find((note) => note._id === id);
 
       if (foundNote) {
         setCurrentNote(foundNote);
@@ -69,9 +40,23 @@ const NoteDetail = () => {
       // In a real app, this would be an API call
 
       // Simulate successful deletion
-      setTimeout(() => {
-        navigate("/dashboard");
-      }, 500);
+      // setTimeout(() => {
+      //   navigate("/dashboard");
+      // }, 500);
+
+      dispatch(deleteNote(id))
+        .unwrap()
+        .then(() => {
+          console.log("Note deleted successfully");
+          // alert("Note deleted");
+          setLoading(false);
+          navigate("/dashboard");
+        })
+        .catch((error) => {
+          console.error("Failed to delete note:", error);
+          setLoading(false);
+          alert("Note not deleted");
+        });
     }
   };
 
