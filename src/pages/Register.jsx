@@ -1,10 +1,10 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { useNavigate } from "react-router-dom";
 import { signupUser } from "../services/authThunk";
 
 const Register = () => {
-  const nevigate = useNavigate();
+  const navigate = useNavigate();
   const dispatch = useDispatch();
 
   const { loading, error, user } = useSelector((state) => state.auth);
@@ -17,7 +17,7 @@ const Register = () => {
   });
 
   const [errors, setErrors] = useState({});
-  const [submitted, setSubmitted] = useState(false);
+  const [signupSuccess, setSignupSuccess] = useState(false);
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -64,23 +64,25 @@ const Register = () => {
     setErrors(validationErrors);
 
     if (Object.keys(validationErrors).length === 0) {
-      setSubmitted(true);
       const payload = {
         fullName: formData.name,
         emailId: formData.email,
         password: formData.password,
       };
-      console.log("payload", payload);
-      // Here you would typically send the data to your backend
-      console.log("Form submitted successfully:", formData);
-      const responce = await dispatch(signupUser(payload));
-      console.log("responce", responce);
+
+      try {
+        const response = await dispatch(signupUser(payload)).unwrap();
+        console.log("Signup response:", response);
+        setSignupSuccess(true);
+      } catch (err) {
+        console.error("Signup failed:", err);
+      }
     }
   };
 
   return (
     <div className="max-w-md mx-auto mt-8 p-6 bg-white rounded-lg shadow-md">
-      {submitted && !error?.login ? (
+      {signupSuccess ? (
         <div className="text-center">
           <h2 className="text-2xl font-bold text-green-600 mb-4">
             Registration Successful!
@@ -88,14 +90,14 @@ const Register = () => {
           <p className="mb-4">Thank you for registering, {formData.name}!</p>
           <button
             onClick={() => {
-              setSubmitted(false);
+              setSignupSuccess(false);
               setFormData({
                 name: "",
                 email: "",
                 password: "",
                 confirmPassword: "",
               });
-              nevigate("/login");
+              navigate("/login");
             }}
             className="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600"
           >
@@ -200,9 +202,12 @@ const Register = () => {
 
             <button
               onClick={handleSubmit}
-              className="w-full bg-blue-500 text-white py-2 px-4 rounded-lg hover:bg-blue-600 transition-colors"
+              disabled={loading}
+              className={`w-full ${
+                loading ? "bg-blue-300" : "bg-blue-500 hover:bg-blue-600"
+              } text-white py-2 px-4 rounded-lg transition-colors`}
             >
-              Register
+              {loading ? "Registering..." : "Register"}
             </button>
           </div>
         </>
