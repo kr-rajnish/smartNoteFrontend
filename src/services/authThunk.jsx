@@ -78,36 +78,18 @@ export const getUserData = createAsyncThunk(
 );
 
 // Logout
-// export const logoutUser = createAsyncThunk(
-//   "auth/logoutUser",
-//   async (_, thunkAPI) => {
-//     try {
-//       const response = await axiosInstance.post("/logout");
-//       return response.data;
-//     } catch (err) {
-//       return thunkAPI.rejectWithValue(err.response.data);
-//     }
-//   }
-// );
-// In your auth.jsx
 export const logoutUser = createAsyncThunk(
   "auth/logoutUser",
   async (_, thunkAPI) => {
     try {
-      const response = await axiosInstance.post(
-        "/logout",
-        {},
-        {
-          withCredentials: true,
-        }
-      );
-
-      // Clear local storage
+      // Instead of trying to call a non-existent endpoint,
+      // just handle the logout locally
       localStorage.removeItem("token");
       sessionStorage.removeItem("userId");
       sessionStorage.removeItem("isFirstLogin");
 
-      return response.data;
+      // Return a successful response
+      return { success: true, message: "Logged out successfully" };
     } catch (err) {
       return thunkAPI.rejectWithValue(err.response?.data || err.message);
     }
