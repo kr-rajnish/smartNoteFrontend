@@ -5,9 +5,7 @@ export const createNote = createAsyncThunk(
   "notes/createNote",
   async (noteData, { rejectWithValue }) => {
     try {
-      const response = await axiosInstance.post("/createNote", noteData, {
-        withCredentials: true,
-      });
+      const response = await axiosInstance.post("/createNote", noteData);
       return response.data;
     } catch (err) {
       return rejectWithValue(err.response?.data || err.message);
