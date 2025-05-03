@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { useDispatch, useSelector } from "react-redux";
+import { useDispatch } from "react-redux";
 import { useNavigate } from "react-router-dom";
 import { createNote } from "../services/noteThunk";
 
@@ -9,22 +9,18 @@ const NoteForm = ({ note = null, isEditing = false }) => {
 
   const userId = sessionStorage.getItem("userId");
 
-  // Initialize state with note data if editing, or empty values if creating
   const [formData, setFormData] = useState({
     title: note ? note.title : "",
     content: note ? note.content : "",
-    summary: note ? note.summary : "", // Fixed typo from "summery" to "summary"
+    summary: note ? note.summary : "",
     tags: note ? note.tags : [],
     user: userId,
   });
 
-  // State for the new tag input
   const [newTag, setNewTag] = useState("");
 
-  // State for loading
   const [loading, setLoading] = useState(false);
 
-  // Handle form field changes
   const handleChange = (e) => {
     const { name, value } = e.target;
     setFormData((prevData) => ({
@@ -33,7 +29,6 @@ const NoteForm = ({ note = null, isEditing = false }) => {
     }));
   };
 
-  // Handle adding a tag
   const handleAddTag = (e) => {
     e.preventDefault();
     if (newTag.trim() && !formData.tags.includes(newTag.trim())) {
@@ -45,7 +40,6 @@ const NoteForm = ({ note = null, isEditing = false }) => {
     }
   };
 
-  // Handle removing a tag
   const handleRemoveTag = (tagToRemove) => {
     setFormData((prevData) => ({
       ...prevData,
@@ -53,12 +47,10 @@ const NoteForm = ({ note = null, isEditing = false }) => {
     }));
   };
 
-  // Handle form submission
   const handleSubmit = (e) => {
     e.preventDefault();
     setLoading(true);
 
-    // Validate form
     if (!formData.title.trim()) {
       alert("Title is required");
       setLoading(false);
@@ -71,18 +63,11 @@ const NoteForm = ({ note = null, isEditing = false }) => {
       return;
     }
 
-    // Log data that would be sent to API
     console.log("Sending to API:", {
       method: isEditing ? "PUT" : "POST",
       endpoint: isEditing ? `/api/notes/${note._id}` : "/api/notes",
       data: formData,
     });
-
-    // // Simulate API call
-    // setTimeout(() => {
-    //   setLoading(false);
-    //   navigate("/dashboard");
-    // }, 1000);
 
     dispatch(createNote(formData))
       .unwrap()
@@ -105,7 +90,6 @@ const NoteForm = ({ note = null, isEditing = false }) => {
       </h1>
 
       <form onSubmit={handleSubmit} className="space-y-6">
-        {/* Title Input */}
         <div>
           <label
             htmlFor="title"
@@ -124,7 +108,6 @@ const NoteForm = ({ note = null, isEditing = false }) => {
           />
         </div>
 
-        {/* Summary Input (New) */}
         <div>
           <label
             htmlFor="summary"
@@ -142,7 +125,6 @@ const NoteForm = ({ note = null, isEditing = false }) => {
           />
         </div>
 
-        {/* Content Textarea (replacing ReactQuill) */}
         <div>
           <label
             htmlFor="content"
@@ -161,7 +143,6 @@ const NoteForm = ({ note = null, isEditing = false }) => {
           />
         </div>
 
-        {/* Tags Section */}
         <div>
           <label className="block text-sm font-medium text-gray-700 mb-1">
             Tags
@@ -202,7 +183,6 @@ const NoteForm = ({ note = null, isEditing = false }) => {
           </div>
         </div>
 
-        {/* Form Actions */}
         <div className="flex justify-between pt-5">
           <button
             type="button"

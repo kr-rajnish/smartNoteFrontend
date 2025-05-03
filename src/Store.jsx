@@ -1,4 +1,3 @@
-// app/store.js
 import { configureStore } from "@reduxjs/toolkit";
 import authReducer from "./services/authSlice";
 import notesReducer from "./services/noteSlice";

@@ -13,19 +13,6 @@ export const createNote = createAsyncThunk(
   }
 );
 
-// export const getNotes = createAsyncThunk(
-//   "notes/getNotes",
-//   async (_, { rejectWithValue }) => {
-//     try {
-//       const response = await axiosInstance.get("/getNotes", {
-//         withCredentials: true,
-//       });
-//       return response.data;
-//     } catch (err) {
-//       return rejectWithValue(err.response?.data || err.message);
-//     }
-//   }
-// );
 export const getNotes = createAsyncThunk(
   "notes/getNotes",
   async ({ search = "", tag = "" } = {}, { rejectWithValue }) => {
@@ -33,7 +20,6 @@ export const getNotes = createAsyncThunk(
       console.log("Thunk params:", { search, tag });
       const params = {};
 
-      // Only add parameters that have values
       if (search) params.search = search;
       if (tag) params.tag = tag;
 

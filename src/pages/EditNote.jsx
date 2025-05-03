@@ -3,8 +3,6 @@ import { useDispatch, useSelector } from "react-redux";
 import { useParams, useNavigate } from "react-router-dom";
 import { updateNote } from "../services/noteThunk";
 
-// Dummy data to replace API calls
-
 const EditNote = () => {
   const dispatch = useDispatch();
   const allNotes = useSelector((state) => state.notes?.notes);
@@ -15,7 +13,6 @@ const EditNote = () => {
   const [error, setError] = useState(null);
   const navigate = useNavigate();
 
-  // Form state for editable fields
   const [formData, setFormData] = useState({
     title: "",
     content: "",
@@ -23,44 +20,35 @@ const EditNote = () => {
     tags: [],
   });
 
-  // State for new tag input
   const [newTag, setNewTag] = useState("");
 
-  // Simulate API call to fetch note data
   useEffect(() => {
-    // Simulate network request
     setLoading(true);
 
     console.log("Fetching note with ID:", id);
 
-    // Simulate API delay
     setTimeout(() => {
-      // Find the note in our dummy data
       const foundNote = allNotes.find((note) => note._id === id);
-      // const findNote = async () => {
-      //   const response = await dispatch()
-      // }
 
       if (foundNote) {
         console.log("Note data retrieved:", foundNote);
-        // Set form data with the found note
+
         setFormData({
           title: foundNote.title,
           content: foundNote.content,
-          tags: [...foundNote.tags], // Create a copy to avoid reference issues
+          tags: [...foundNote.tags],
         });
         setLoading(false);
       } else {
         console.log("Note not found");
         setError("Note not found. It may have been deleted or moved.");
         setLoading(false);
-        // Redirect after short delay
+
         setTimeout(() => navigate("/dashboard"), 2000);
       }
     }, 800);
   }, [id, navigate]);
 
-  // Handle form field changes
   const handleChange = (e) => {
     const { name, value } = e.target;
     setFormData((prev) => ({
@@ -69,7 +57,6 @@ const EditNote = () => {
     }));
   };
 
-  // Handle adding a tag
   const handleAddTag = (e) => {
     e.preventDefault();
     if (newTag.trim() && !formData.tags.includes(newTag.trim())) {
@@ -81,7 +68,6 @@ const EditNote = () => {
     }
   };
 
-  // Handle removing a tag
   const handleRemoveTag = (tagToRemove) => {
     setFormData((prev) => ({
       ...prev,
@@ -89,12 +75,10 @@ const EditNote = () => {
     }));
   };
 
-  // Handle form submission
   const handleSubmit = (e) => {
     e.preventDefault();
     setLoading(true);
 
-    // Validate form
     if (!formData.title.trim()) {
       alert("Title is required");
       setLoading(false);
@@ -121,7 +105,6 @@ const EditNote = () => {
       });
   };
 
-  // Loading state
   if (loading) {
     return (
       <div className="flex justify-center items-center h-64">
@@ -130,7 +113,6 @@ const EditNote = () => {
     );
   }
 
-  // Error state
   if (error) {
     return (
       <div className="max-w-4xl mx-auto px-4 py-8">
@@ -156,7 +138,6 @@ const EditNote = () => {
       <h1 className="text-3xl font-bold mb-6">Edit Note</h1>
 
       <form onSubmit={handleSubmit} className="space-y-6">
-        {/* Title Input */}
         <div>
           <label
             htmlFor="title"
@@ -175,7 +156,6 @@ const EditNote = () => {
           />
         </div>
 
-        {/* Content Textarea */}
         <div>
           <label
             htmlFor="content"
@@ -194,7 +174,6 @@ const EditNote = () => {
           />
         </div>
 
-        {/* Tags Section */}
         <div>
           <label className="block text-sm font-medium text-gray-700 mb-1">
             Tags
@@ -235,7 +214,6 @@ const EditNote = () => {
           </div>
         </div>
 
-        {/* Form Actions */}
         <div className="flex justify-between pt-5">
           <button
             type="button"

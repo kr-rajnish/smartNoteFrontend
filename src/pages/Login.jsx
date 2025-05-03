@@ -18,7 +18,7 @@ const Login = () => {
     e.preventDefault();
     const res = await dispatch(loginUser(form));
     if (res.payload?.success) {
-      navigate("/dashboard"); // change to your intended page
+      navigate("/dashboard");
     }
   };
 

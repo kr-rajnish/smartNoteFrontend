@@ -21,34 +21,28 @@ const Dashboard = () => {
     itemsPerPage: 6,
   });
 
-  // Initialize searchQuery from Redux state on component mount
   useEffect(() => {
     if (filters.search) {
       setSearchQuery(filters.search);
     }
   }, []);
 
-  // Check for first login status
   useEffect(() => {
     dispatch(checkFirstLoginStatus());
   }, [dispatch]);
 
-  // Set onboarding modal based on isFirstLogin status
   useEffect(() => {
     if (isFirstLogin) {
       setShowOnboarding(true);
     }
   }, [isFirstLogin]);
 
-  // Load notes with search params on component mount and whenever search changes
   useEffect(() => {
     fetchNotes();
   }, [dispatch, filters]);
 
-  // Fetch notes from API with search parameters
   const fetchNotes = async () => {
     try {
-      // Log the search parameters for debugging
       console.log("Fetching notes with params:", {
         search: filters.search,
         tag: filters.tag,
@@ -65,7 +59,6 @@ const Dashboard = () => {
     }
   };
 
-  // Debounced search function
   const debouncedSearch = useCallback(
     (() => {
       let timeoutId = null;
@@ -74,7 +67,6 @@ const Dashboard = () => {
           clearTimeout(timeoutId);
         }
 
-        // If query is empty, search after 1 second
         if (!query) {
           timeoutId = setTimeout(() => {
             dispatch(
@@ -89,7 +81,6 @@ const Dashboard = () => {
             }));
           }, 1000);
         } else {
-          // If query has content, search after 2 seconds
           timeoutId = setTimeout(() => {
             dispatch(
               setFilters({
@@ -108,19 +99,16 @@ const Dashboard = () => {
     [filters, dispatch]
   );
 
-  // Handle search input change
   const handleSearchInputChange = (e) => {
     const query = e.target.value;
     setSearchQuery(query);
     debouncedSearch(query);
   };
 
-  // Manual search form submission
   const handleSearch = (e) => {
     e.preventDefault();
     console.log("Manual search initiated:", searchQuery);
 
-    // Update the filters in Redux store immediately
     dispatch(
       setFilters({
         ...filters,
@@ -128,32 +116,25 @@ const Dashboard = () => {
       })
     );
 
-    // Reset to first page when searching
     setPagination((prev) => ({
       ...prev,
       currentPage: 1,
     }));
   };
 
-  // Update displayed notes and pagination whenever notes change
   useEffect(() => {
-    // Calculate total pages based on notes count and items per page
     const totalPages = Math.ceil(notes.length / pagination.itemsPerPage);
 
-    // Ensure current page is valid
     const validCurrentPage = Math.min(
       pagination.currentPage,
       Math.max(1, totalPages)
     );
 
-    // Calculate start and end indices for pagination
     const startIndex = (validCurrentPage - 1) * pagination.itemsPerPage;
     const endIndex = startIndex + pagination.itemsPerPage;
 
-    // Set displayed notes to the current page's items
     setDisplayedNotes(notes.slice(startIndex, endIndex));
 
-    // Update pagination info
     setPagination((prev) => ({
       ...prev,
       currentPage: validCurrentPage,
@@ -161,7 +142,6 @@ const Dashboard = () => {
     }));
   }, [notes, pagination.currentPage, pagination.itemsPerPage]);
 
-  // Clear search
   const handleClearSearch = () => {
     setSearchQuery("");
     dispatch(
@@ -177,7 +157,7 @@ const Dashboard = () => {
       ...prev,
       currentPage: page,
     }));
-    // Scroll to top of the notes section
+
     window.scrollTo({ top: 0, behavior: "smooth" });
   };
 
@@ -188,7 +168,7 @@ const Dashboard = () => {
         .then(() => {
           console.log("Note deleted successfully");
           alert("Note deleted");
-          // Refresh notes list after deletion
+
           fetchNotes();
         })
         .catch((error) => {
@@ -200,11 +180,10 @@ const Dashboard = () => {
 
   const handleCloseOnboarding = () => {
     setShowOnboarding(false);
-    // Update the first login status in the database
+
     dispatch(updateFirstLoginStatus());
   };
 
-  // Generate array of page numbers for pagination UI
   const pageNumbers = Array.from(
     { length: pagination.totalPages },
     (_, i) => i + 1
@@ -246,7 +225,6 @@ const Dashboard = () => {
 
       <h1 className="text-3xl font-bold mb-6">Your Notes</h1>
 
-      {/* Search */}
       <div className="mb-6">
         <form onSubmit={handleSearch} className="flex">
           <input
@@ -282,7 +260,6 @@ const Dashboard = () => {
         )}
       </div>
 
-      {/* Notes Grid */}
       {isLoading ? (
         <div className="flex justify-center my-12">
           <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-blue-600"></div>
@@ -361,10 +338,8 @@ const Dashboard = () => {
         </div>
       )}
 
-      {/* Pagination */}
       {pagination.totalPages > 1 && (
         <div className="flex justify-center mt-8">
-          {/* Previous page button */}
           <button
             onClick={() =>
               handlePageChange(Math.max(1, pagination.currentPage - 1))
@@ -379,7 +354,6 @@ const Dashboard = () => {
             &laquo;
           </button>
 
-          {/* Page numbers */}
           {pageNumbers.map((page) => (
             <button
               key={page}
@@ -394,7 +368,6 @@ const Dashboard = () => {
             </button>
           ))}
 
-          {/* Next page button */}
           <button
             onClick={() =>
               handlePageChange(
@@ -413,7 +386,6 @@ const Dashboard = () => {
         </div>
       )}
 
-      {/* Page info */}
       {!isLoading && displayedNotes.length > 0 && (
         <div className="text-center text-gray-500 mt-4">
           Showing page {pagination.currentPage} of {pagination.totalPages}

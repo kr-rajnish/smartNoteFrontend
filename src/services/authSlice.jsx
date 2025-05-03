@@ -1,4 +1,3 @@
-// src/features/auth/authSlice.js
 import { createSlice } from "@reduxjs/toolkit";
 import {
   signupUser,
@@ -88,7 +87,7 @@ const authSlice = createSlice({
       })
       .addCase(updateFirstLoginStatus.fulfilled, (state, action) => {
         state.isLoading = false;
-        state.isFirstLogin = false; // Set to false as the status is updated
+        state.isFirstLogin = false;
         sessionStorage.setItem("isFirstLogin", "false");
       })
       .addCase(updateFirstLoginStatus.rejected, (state, action) => {
@@ -116,7 +115,6 @@ const authSlice = createSlice({
       })
       .addCase(logoutUser.fulfilled, (state) => {
         state.loading = false;
-        // Optionally clear token and user here if not done by the backend
         state.user = null;
         state.token = null;
         localStorage.removeItem("token");

@@ -10,14 +10,11 @@ const NoteDetail = () => {
 
   const allNotes = useSelector((state) => state.notes?.notes);
 
-  // State to manage the current note and loading status
   const [currentNote, setCurrentNote] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
-  // Simulate API call to fetch a specific note
   useEffect(() => {
-    // Simulate network delay
     const timer = setTimeout(() => {
       const foundNote = allNotes.find((note) => note._id === id);
 
@@ -28,27 +25,20 @@ const NoteDetail = () => {
         setError("Note not found. It may have been deleted or moved.");
         setLoading(false);
       }
-    }, 800); // Simulate loading delay
+    }, 800);
 
     return () => clearTimeout(timer);
   }, [id]);
 
-  // Handle note deletion
   const handleDelete = () => {
     if (window.confirm("Are you sure you want to delete this note?")) {
       console.log("Delete note with ID:", id);
-      // In a real app, this would be an API call
-
-      // Simulate successful deletion
-      // setTimeout(() => {
-      //   navigate("/dashboard");
-      // }, 500);
 
       dispatch(deleteNote(id))
         .unwrap()
         .then(() => {
           console.log("Note deleted successfully");
-          // alert("Note deleted");
+
           setLoading(false);
           navigate("/dashboard");
         })
@@ -60,7 +50,6 @@ const NoteDetail = () => {
     }
   };
 
-  // Loading state
   if (loading) {
     return (
       <div className="flex justify-center items-center h-64">
@@ -69,7 +58,6 @@ const NoteDetail = () => {
     );
   }
 
-  // Error state
   if (error) {
     return (
       <div className="max-w-4xl mx-auto px-4 py-8">
@@ -90,7 +78,6 @@ const NoteDetail = () => {
     );
   }
 
-  // If no note is found
   if (!currentNote) {
     return null;
   }

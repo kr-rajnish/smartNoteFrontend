@@ -82,13 +82,10 @@ export const logoutUser = createAsyncThunk(
   "auth/logoutUser",
   async (_, thunkAPI) => {
     try {
-      // Instead of trying to call a non-existent endpoint,
-      // just handle the logout locally
       localStorage.removeItem("token");
       sessionStorage.removeItem("userId");
       sessionStorage.removeItem("isFirstLogin");
 
-      // Return a successful response
       return { success: true, message: "Logged out successfully" };
     } catch (err) {
       return thunkAPI.rejectWithValue(err.response?.data || err.message);

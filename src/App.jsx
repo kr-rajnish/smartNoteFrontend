@@ -33,7 +33,7 @@ const App = () => {
               <Route path="/note/:id" element={<NoteDetail />} />
             </Route>
 
-            {/* Redirects - These are important */}
+            {/* Redirects */}
             <Route path="/" element={<Navigate to="/dashboard" replace />} />
             <Route path="*" element={<Navigate to="/dashboard" replace />} />
           </Routes>
